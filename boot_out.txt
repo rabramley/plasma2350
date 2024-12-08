@@ -1,0 +1,3 @@
+Adafruit CircuitPython 9.2.1 on 2024-11-20; Pimoroni Plasma 2350 with rp2350b
+Board ID:pimoroni_plasma2350
+UID:EBE82A75B8506E2C
