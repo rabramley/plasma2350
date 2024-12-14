@@ -1,38 +1,36 @@
-# SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
 # type: ignore
 
 """CircuitPython Essentials NeoPixel example"""
 import time
 import board
-from rainbowio import colorwheel
 import neopixel
+import random
 
-pixel_pin = board.DATA
-num_pixels = 50
+def shuffle(l):
+    result = list(l)
+    for i in range(len(result)):
+        ni = random.randint(0, len(result) - 1)
+        result[i], result[ni] = result[ni], result[i]
 
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False)
-
-
-def color_chase(color, wait):
-    for i in range(num_pixels):
-        pixels[i] = color
-        time.sleep(wait)
-        pixels.show()
-    time.sleep(0.5)
+    return result
 
 
-def rainbow_cycle(wait):
-    for j in range(255):
-        for i in range(num_pixels):
-            rc_index = (i * 256 // num_pixels) + j
-            pixels[i] = colorwheel(rc_index & 255)
-        pixels.show()
-        time.sleep(wait)
+class NeoStrip:
+    def __init__(self, data_pin, num_pixels):
+        self.num_pixels = num_pixels
+        self.pixels = neopixel.NeoPixel(
+            data_pin,
+            num_pixels,
+            brightness=1,
+            auto_write=False,
+            pixel_order=(1, 0, 2, 3))
+
+    def fill(self, color):
+        self.pixels.fill(color)
+        self.pixels.show()
 
 
-class pallet:
+class Pallet:
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
@@ -52,29 +50,18 @@ class pallet:
             self.PURPLE,
         ]
 
-def flash_colours(pixels, RED, GREEN, BLUE):
-    pixels.fill(RED)
-    pixels.show()
-    time.sleep(1)
-    pixels.fill(GREEN)
-    pixels.show()
-    time.sleep(1)
-    pixels.fill(BLUE)
-    pixels.show()
-    time.sleep(1)
+    def random(self):
+        return random.choice(self.colours())
 
-def chase_colours(color_chase, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE):
-    color_chase(RED, 0.1)  # Increase the number to slow down the color chase
-    color_chase(YELLOW, 0.1)
-    color_chase(GREEN, 0.1)
-    color_chase(CYAN, 0.1)
-    color_chase(BLUE, 0.1)
-    color_chase(PURPLE, 0.1)
+strips = [
+    NeoStrip(data_pin=board.GP14, num_pixels=10),
+    NeoStrip(data_pin=board.GP15, num_pixels=10),
+]
+
+pallet = Pallet()
 
 while True:
-    flash_colours(pixels, pallet.RED, pallet.GREEN, pallet.BLUE)
-
-    chase_colours(color_chase, pallet.RED, pallet.YELLOW, pallet.GREEN, pallet.CYAN, pallet.BLUE, pallet.PURPLE)
-
-    rainbow_cycle(0)  # Increase the number to slow down the rainbow
+    for s, c in zip(strips, shuffle(pallet.colours())):
+        s.fill(c)
+    time.sleep(1)
  
